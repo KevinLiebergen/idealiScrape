@@ -1,22 +1,19 @@
 # 🏠 IdealiScrape
 
-**IdealiScrape** is a powerful and customizable Python scraper for real estate listings on [Idealista](https://www.idealista.com). It monitors new listings matching your criteria and sends instant notifications to your Telegram channel.
-
-It is designed to bypass basic anti-scraping measures using `undetected-chromedriver` and mimics human behavior.
+**IdealiScrape** is a real estate tool that monitors [Idealista](https://www.idealista.com) for new listings using the **Official Idealista API**. It sends instant notifications to your Telegram channel when new properties matching your criteria are found.
 
 ## ✨ Features
 
-- **🔍 Parametric Search**: Filter by zone, neighborhood, price, and listing type (Sale/Rent).
-- **📱 Telegram Notifications**: Get instant alerts with details (Price, Size, Location, Link) directly to your phone.
-- **💾 Database Storage**: Stores findings in a local SQLite database (`data/listings.db`) to prevent duplicate notifications.
-- **👻 Stealth Mode**: Runs in **Headless Mode** by default (invisible browser) with anti-detection headers.
-- **🐛 Debugging**: Includes a visible browser mode (`--no-headless`) and automatic screenshot capture on errors.
+- **🚀 Official API Integration**: Fast, reliable, and no more CAPTCHAs or blocks!
+- **🔍 Parametric Search**: Filter by location (coordinates or zone name), price, type (Sale/Rent), and distance.
+- **📱 Telegram Notifications**: Instant formatted alerts with Price, Size, Location, and Link.
+- **💾 Database Storage**: Prevents duplicate notifications by tracking listings in a local SQLite database (`data/listings.db`).
 
 ## 🚀 Installation
 
 ### Prerequisites
 - Python 3.10+
-- Google Chrome browser installed.
+- Idealista API Keys (Request at [developers.idealista.com](https://developers.idealista.com))
 
 ### Steps
 1.  **Clone the repository**:
@@ -37,50 +34,52 @@ It is designed to bypass basic anti-scraping measures using `undetected-chromedr
     ```
 
 4.  **Configuration**:
-    Create a `.env` file in the root directory (copy from `.env.example`):
+    Create a `.env` file in the root directory:
     ```bash
     cp .env.example .env
     ```
-    Edit `.env` and add your Telegram credentials:
+    Edit `.env` with your credentials:
     ```env
     TELEGRAM_TOKEN=your_bot_token
     TELEGRAM_CHAT_ID=your_chat_id
+    IDEALISTA_API_KEY=your_api_key
+    IDEALISTA_API_SECRET=your_api_secret
     ```
 
 ## 🛠 Usage
 
-Run the scraper using `main.py`. By default, it runs in **headless mode** (invisible).
+Run the tool using `main.py`.
 
-### Basic Command
+### Basic Command (Madrid Sol default)
 ```bash
-python main.py
+python main.py --type rent --price-max 1200
 ```
 
-### Filters & Arguments
+### Options
 
 | Argument | Description | Default | Example |
 | :--- | :--- | :--- | :--- |
-| `--zone` | City or Zone to search | `madrid` | `--zone barcelona` |
-| `--neighborhood` | Specific neighborhood | `ciudad-lineal` | `--neighborhood gracia` |
-| `--price-max` | Maximum price filter | `1200` | `--price-max 1500` |
-| `--type` | Listing type: `sale` or `rent` | `rent` | `--type sale` |
-| `--no-headless` | Run with visible browser window | `False` | `--no-headless` |
+| `--center` | Coordinates (Lat,Lng) | `40.4167,-3.70325` (Madrid) | `--center "41.3851,2.1734"` |
+| `--zone` | Name of zone/city to search via Nominatim | `None` | `--zone "Valencia"` |
+| `--distance` | Search radius in meters | `3000` | `--distance 5000` |
+| `--price-max` | Maximum price filter | `None` | `--price-max 1500` |
+| `--type` | Listing type: `sale` or `rent` | `sale` | `--type rent` |
 
 ### Examples
 
-**Search for Rentals in Madrid (Ciudad Lineal) under 1200€:**
+**Rentals in Barcelona (Center) under 1500€:**
 ```bash
-python main.py --type rent --zone madrid --neighborhood ciudad-lineal --price-max 1200
+python main.py --type rent --price-max 1500 --center "41.3851,2.1734"
 ```
 
-**Search for Sales in Barcelona under 500k€:**
+**Rentals in Valencia (Zone Name):**
 ```bash
-python main.py --type sale --zone barcelona --price-max 500000
+python main.py --type rent --zone "Valencia"
 ```
 
-**Debug Mode (Visible Browser):**
+**Sales in Madrid within 1km of Sol:**
 ```bash
-python main.py --no-headless
+python main.py --type sale --distance 1000
 ```
 
 ## 📂 Project Structure
@@ -88,16 +87,16 @@ python main.py --no-headless
 ```
 IdealiScrape/
 ├── data/
-│   └── listings.db       # SQLite database (auto-created)
+│   └── listings.db       # SQLite database
 ├── src/
-│   ├── scraper.py        # Logic for Selenium & BeautifulSoup
+│   ├── api.py            # Official API Client (Auth, Search)
 │   ├── database.py       # Database operations
 │   ├── notifier.py       # Telegram notification logic
 │   └── settings.py       # Configuration loader
 ├── main.py               # Entry point
-├── requirements.txt      # Python dependencies
-└── .env                  # Secrets (gitignored)
+├── requirements.txt      # Dependencies
+└── .env                  # Secrets
 ```
 
 ## ⚠️ Disclaimer
-This tool is for educational purposes only. Scraping websites without permission may violate their Terms of Service. Use responsibly and respect rate limits.
+This tool is for educational purposes. Ensure you comply with Idealista's API Terms of Service.

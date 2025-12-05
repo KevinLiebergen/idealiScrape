@@ -22,17 +22,6 @@ def init_db():
         )
     ''')
     
-    # Attempt to add columns if they don't exist (migration)
-    try:
-        cursor.execute("ALTER TABLE listings ADD COLUMN sq_meters TEXT")
-    except sqlite3.OperationalError:
-        pass # Column likely already exists
-        
-    try:
-        cursor.execute("ALTER TABLE listings ADD COLUMN location TEXT")
-    except sqlite3.OperationalError:
-        pass # Column likely already exists
-
     conn.commit()
     conn.close()
 
