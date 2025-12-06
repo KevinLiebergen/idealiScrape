@@ -26,6 +26,7 @@ async def main():
     
     parser.add_argument("--distance", type=int, default=3000, help="Distance in meters from center")
     parser.add_argument("--price-max", type=int, default=1000, help="Max price")
+    parser.add_argument("--minsize", type=int, default=None, help="Min size in m2")
     parser.add_argument("--type", type=str, default="rent", choices=['sale', 'rent'], help="Listing type")
     
     args = parser.parse_args()
@@ -67,7 +68,7 @@ async def main():
             distance=args.distance,
             operation=args.type,
             maxPrice=args.price_max,
-            minSize=None # Can add more args later
+            minSize=args.minsize
         )
     except Exception as e:
         print(f"[-] API Error: {e}")
