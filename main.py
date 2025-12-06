@@ -94,7 +94,19 @@ async def main():
         price = f"{item.get('price'):,} {item.get('currencySuffix', '€')}"
         link = item.get("url")
         sq_meters = f"{item.get('size')} m²"
-        location = item.get("address", "Unknown Location") # API gives cleaner address
+        address = item.get("address", "Unknown Location")
+        neighborhood = item.get("neighborhood")
+        district = item.get("district")
+        
+        location = address
+        extra_info = []
+        if neighborhood:
+            extra_info.append(neighborhood)
+        if district:
+            extra_info.append(district)
+            
+        if extra_info:
+            location += f" ({', '.join(extra_info)})"
         
         # Save to DB
         save_listing({

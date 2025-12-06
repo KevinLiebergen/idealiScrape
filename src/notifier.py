@@ -1,13 +1,17 @@
 from telegram import Bot
 import asyncio
 
+from telegram.request import HTTPXRequest
+
 async def send_message(token, chat_id, message):
     """Send a message to Telegram channel."""
     if not token or not chat_id:
         print("Telegram token or chat_id missing.")
         return
 
-    bot = Bot(token=token)
+    # Ignore environment variables (proxies)
+    request = HTTPXRequest(httpx_kwargs={"trust_env": False})
+    bot = Bot(token=token, request=request)
     try:
         async with bot:
             await bot.send_message(chat_id=chat_id, text=message, parse_mode='Markdown')
