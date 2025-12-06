@@ -79,7 +79,7 @@ python main.py --type rent --zone "Valencia"
 
 **Sales in Madrid within 1km of Sol:**
 ```bash
-python main.py --type sale --distance 1000
+python main.py --type sale --zone "Madrid" --distance 1000
 ```
 
 ## ⏰ Automation (Cron)
@@ -89,8 +89,8 @@ If you need to use a proxy, make sure to export `HTTP_PROXY` and `HTTPS_PROXY` i
 
 ```bash
 # Example: Run every 30 minutes
-*/30 * * * * HTTP_PROXY="http://proxy:port" HTTPS_PROXY="http://proxy:port" /path/to/IdealiScrape/venv/bin/python /path/to/IdealiScrape/main.py --zone "Madrid"
-```
+*/30 * * * * HTTP_PROXY="http://proxy:port" HTTPS_PROXY="http://proxy:port" /path/to/IdealiScrape/venv/bin/python /path/to/IdealiScrape/main.py --zone "Madrid" >> /path/to/IdealiScrape/logs/ideali.log 2>&1
+*/30 * * * * /path/to/IdealiScrape/venv/bin/python /path/to/IdealiScrape/main.py --zone "Madrid"``` >> /path/to/IdealiScrape/logs/ideali.log 2>&1
 
 ## 📂 Project Structure
 
