@@ -1,8 +1,9 @@
 import sqlite3
 import os
+from src.settings import BASE_DIR
 
-DB_FOLDER = "data"
-DB_NAME = os.path.join(DB_FOLDER, "listings.db")
+DB_FOLDER = BASE_DIR / "data"
+DB_NAME = str(DB_FOLDER / "listings.db")
 
 def init_db():
     """Initialize the database and create table if not exists."""

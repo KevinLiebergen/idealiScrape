@@ -82,6 +82,16 @@ python main.py --type rent --zone "Valencia"
 python main.py --type sale --distance 1000
 ```
 
+## ⏰ Automation (Cron)
+
+To run the script periodically via `cron`, you can add a line to your crontab.
+If you need to use a proxy, make sure to export `HTTP_PROXY` and `HTTPS_PROXY` in the cron command.
+
+```bash
+# Example: Run every 30 minutes
+*/30 * * * * HTTP_PROXY="http://proxy:port" HTTPS_PROXY="http://proxy:port" /path/to/IdealiScrape/venv/bin/python /path/to/IdealiScrape/main.py --zone "Madrid"
+```
+
 ## 📂 Project Structure
 
 ```
