@@ -9,6 +9,8 @@
 - **📱 Telegram Notifications**: Instant formatted alerts with Price, Size, Location, and Link.
 - **💾 Database Storage**: Prevents duplicate notifications by tracking listings in a local SQLite database (`data/listings.db`).
 
+![Notification Preview](assets/notification.png)
+
 ## 🚀 Installation
 
 ### Prerequisites
