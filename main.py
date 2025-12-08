@@ -10,6 +10,7 @@ from src.settings import (
 from src.database import init_db, save_listing, listing_exists
 from src.notifier import send_message
 from src.api import IdealistaAPI
+from src.logger import logger
 
 from src.geocoder import get_coordinates
 
@@ -37,30 +38,30 @@ async def main():
     if args.center:
         center = args.center
     elif args.zone:
-        print(f"[*] Resolving coordinates for zone: '{args.zone}'...")
+        logger.info(f"[*] Resolving coordinates for zone: '{args.zone}'...")
         coords = get_coordinates(args.zone)
         if coords:
             center = f"{coords[0]},{coords[1]}"
-            print(f"[+] Coordinates found: {center}")
+            logger.info(f"[+] Coordinates found: {center}")
         else:
-            print(f"[-] Could not resolve coordinates for '{args.zone}'. Using default center.")
+            logger.warning(f"[-] Could not resolve coordinates for '{args.zone}'. Using default center.")
     else:
         # Neither specified, stick to default
         pass
 
     # 1. Init DB
     init_db()
-    print("[+] Database initialized.")
+    logger.info("[+] Database initialized.")
 
     # 2. Init API
     if not IDEALISTA_API_KEY or not IDEALISTA_API_SECRET:
-        print("[-] Error: API credentials missing. Check .env")
+        logger.error("[-] Error: API credentials missing. Check .env")
         sys.exit(1)
         
     api = IdealistaAPI(IDEALISTA_API_KEY, IDEALISTA_API_SECRET)
 
     # 3. Search
-    print(f"[+] Searching via API | Type: {args.type} | Center: {center} | Max Price: {args.price_max}")
+    logger.info(f"[+] Searching via API | Type: {args.type} | Center: {center} | Max Price: {args.price_max}")
     
     try:
         results = api.search_properties(
@@ -71,11 +72,11 @@ async def main():
             minSize=args.minsize
         )
     except Exception as e:
-        print(f"[-] API Error: {e}")
+        logger.error(f"[-] API Error: {e}")
         return
 
     listings = results.get("elementList", [])
-    print(f"[+] Found {len(listings)} listings.")
+    logger.info(f"[+] Found {len(listings)} listings.")
 
     new_count = 0
     
@@ -129,7 +130,7 @@ async def main():
         # Slight delay to respect Telegram limits
         await asyncio.sleep(3)
 
-    print(f"[+] Process complete. {new_count} new listings saved and notified.\n")
+    logger.info(f"[+] Process complete. {new_count} new listings saved and notified.\n")
 
 if __name__ == "__main__":
     asyncio.run(main())

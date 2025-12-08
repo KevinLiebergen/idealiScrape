@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from .logger import logger
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 # src/settings.py -> src/ -> project_root
@@ -17,7 +18,7 @@ IDEALISTA_API_SECRET = os.getenv("IDEALISTA_API_SECRET")
 
 # Validation
 if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID:
-    print("[-] Warning: Telegram credentials not found in .env")
+    logger.warning("[-] Warning: Telegram credentials not found in .env")
 
 if not IDEALISTA_API_KEY or not IDEALISTA_API_SECRET:
-    print("[-] Warning: Idealista API credentials not found in .env")
+    logger.warning("[-] Warning: Idealista API credentials not found in .env")

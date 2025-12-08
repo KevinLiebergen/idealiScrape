@@ -1,5 +1,6 @@
 import requests
 from typing import Optional, Tuple
+from .logger import logger
 
 def get_coordinates(zone_name: str) -> Optional[Tuple[str, str]]:
     """
@@ -41,7 +42,7 @@ def get_coordinates(zone_name: str) -> Optional[Tuple[str, str]]:
             return lat, lon
             
     except requests.RequestException as e:
-        print(f"[-] Geocoding Error: {e}")
+        logger.error(f"[-] Geocoding Error: {e}")
         return None
         
     return None
