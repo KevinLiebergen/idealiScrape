@@ -129,7 +129,7 @@ async def main():
         # Slight delay to respect Telegram limits
         await asyncio.sleep(3)
 
-    print(f"[+] Process complete. {new_count} new listings saved and notified.")
+    print(f"[+] Process complete. {new_count} new listings saved and notified.\n")
 
 if __name__ == "__main__":
     asyncio.run(main())
