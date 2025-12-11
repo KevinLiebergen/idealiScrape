@@ -49,7 +49,7 @@ class IdealistaAPI:
                 logger.error(f"[-] Response Content: {e.response.text}")
             raise
 
-    def search_properties(self, center=None, country="es", max_items=10, **kwargs):
+    def search_properties(self, center=None, country="es", max_items=20, **kwargs):
         """
         Search for properties.
         Args:
