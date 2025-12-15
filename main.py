@@ -61,7 +61,7 @@ async def main():
     api = IdealistaAPI(IDEALISTA_API_KEY, IDEALISTA_API_SECRET)
 
     # 3. Search
-    logger.info(f"[+] Searching via API | Type: {args.type} | Center: {center} | Max Price: {args.price_max}")
+    logger.info(f"[+] Searching via API | Type: {args.type} | Center: {center} | Distance: {args.distance} | Min Size: {args.minsize} | Max Price: {args.price_max}")
     
     try:
         results = api.search_properties(
