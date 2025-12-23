@@ -25,7 +25,7 @@ async def main():
     group.add_argument("--center", type=str, help="Center of search (lat,lng), e.g. '40.4167,-3.70325'")
     group.add_argument("--zone", type=str, help="Name of zone/city to search (e.g. 'Madrid', 'Barcelona')")
     
-    parser.add_argument("--distance", type=int, default=3000, help="Distance in meters from center")
+    parser.add_argument("--distance", type=int, default=4000, help="Distance in meters from center")
     parser.add_argument("--price-max", type=int, default=1000, help="Max price")
     parser.add_argument("--minsize", type=int, default=None, help="Min size in m2")
     parser.add_argument("--type", type=str, default="rent", choices=['sale', 'rent'], help="Listing type")
