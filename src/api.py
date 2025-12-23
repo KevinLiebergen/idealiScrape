@@ -3,6 +3,10 @@ import base64
 import time
 from .logger import logger
 
+class IdealistaAuthError(Exception):
+    """Custom exception for Idealista Authentication errors."""
+    pass
+
 class IdealistaAPI:
     def __init__(self, api_key, api_secret):
         self.api_key = api_key
@@ -26,9 +30,13 @@ class IdealistaAPI:
         
         headers = {
             "Authorization": f"Basic {encoded_credentials}",
-            "Content-Type": "application/x-www-form-urlencoded"
+            "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+            "Accept": "application/json",
+            "Accept-Encoding": "identity",
+            # User-Agent might be helpful
+            "User-Agent": "IdealistaAPI/1.0" 
         }
-        data = {"grant_type": "client_credentials"}
+        data = {"grant_type": "client_credentials", "scope": "read"}
         
         try:
             response = requests.post(url, headers=headers, data=data, timeout=10)
@@ -44,10 +52,15 @@ class IdealistaAPI:
             return self.token
             
         except requests.exceptions.RequestException as e:
-            logger.error(f"[-] Failed to get API Token: {e}")
+            error_msg = f"[-] Failed to get API Token: {e}"
+            logger.error(error_msg)
             if hasattr(e, 'response') and e.response is not None:
+                # Log critical info only
                 logger.error(f"[-] Response Content: {e.response.text}")
-            raise
+                error_msg += f"\nResponse: {e.response.text}"
+            
+            # Raise custom error for easier catching upstream
+            raise IdealistaAuthError(error_msg) from e
 
     def search_properties(self, center=None, country="es", max_items=20, **kwargs):
         """

@@ -9,7 +9,7 @@ from src.settings import (
 )
 from src.database import init_db, save_listing, listing_exists
 from src.notifier import send_message
-from src.api import IdealistaAPI
+from src.api import IdealistaAPI, IdealistaAuthError
 from src.logger import logger
 
 from src.geocoder import get_coordinates
@@ -38,7 +38,7 @@ async def main():
     if args.center:
         center = args.center
     elif args.zone:
-        logger.info(f"[*] Resolving coordinates for zone: '{args.zone}'...")
+        logger.info(f"\n[*] Resolving coordinates for zone: '{args.zone}'...")
         coords = get_coordinates(args.zone)
         if coords:
             center = f"{coords[0]},{coords[1]}"
@@ -71,6 +71,11 @@ async def main():
             maxPrice=args.price_max,
             minSize=args.minsize
         )
+    except IdealistaAuthError as e:
+        logger.error(f"[-] Critical Auth Error: {e}")
+        error_msg = f"🚨 *Idealista Scraper Error* 🚨\n\nFailed to authenticate with Idealista API.\nError: `{e}`"
+        await send_message(TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, error_msg)
+        return
     except Exception as e:
         logger.error(f"[-] API Error: {e}")
         return

@@ -5,3 +5,4 @@ venv/
 *.log
 .DS_Store
 debug_screenshot.png
+.idea/
