@@ -9,7 +9,7 @@ from src.settings import (
 )
 from src.database import init_db, save_listing, listing_exists
 from src.notifier import send_message
-from src.api import IdealistaAPI, IdealistaAuthError
+from src.api import IdealistaAPI, IdealistaAuthError, IdealistaSearchError
 from src.logger import logger
 
 from src.geocoder import get_coordinates
@@ -76,8 +76,15 @@ async def main():
         error_msg = f"🚨 *Idealista Scraper Error* 🚨\n\nFailed to authenticate with Idealista API.\nError: `{e}`"
         await send_message(TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, error_msg)
         return
+    except IdealistaSearchError as e:
+        logger.error(f"[-] Search Error: {e}")
+        error_msg = f"⚠️ *Idealista Search Failed* ⚠️\n\nAPI responded with an error during search.\nError: `{e}`"
+        await send_message(TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, error_msg)
+        return
     except Exception as e:
-        logger.error(f"[-] API Error: {e}")
+        logger.error(f"[-] Unexpected API Error: {e}")
+        error_msg = f"❌ *Idealista Scraper Crash* ❌\n\nUnexpected error occurred.\nError: `{e}`"
+        await send_message(TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, error_msg)
         return
 
     listings = results.get("elementList", [])

@@ -1,10 +1,24 @@
 import requests
 import base64
 import time
-from .logger import logger
+import subprocess
+import json
+
+try:
+    from .logger import logger
+except ImportError:
+    import logging
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
+
+from urllib.parse import quote
 
 class IdealistaAuthError(Exception):
     """Custom exception for Idealista Authentication errors."""
+    pass
+
+class IdealistaSearchError(Exception):
+    """Custom exception for Idealista Search errors."""
     pass
 
 class IdealistaAPI:
@@ -23,43 +37,44 @@ class IdealistaAPI:
 
         url = "https://api.idealista.com/oauth/token"
         
-        # Encoding credentials as per Idealista (and standard OAuth Client Credentials)
-        # Often it requires base64(key:secret) in Authorization header
-        credentials = f"{self.api_key}:{self.api_secret}"
+        # User specified RFC 1738 encoding.
+        credentials = f"{quote(self.api_key, safe='')}:{quote(self.api_secret, safe='')}"
         encoded_credentials = base64.b64encode(credentials.encode()).decode()
         
-        headers = {
-            "Authorization": f"Basic {encoded_credentials}",
-            "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
-            "Accept": "application/json",
-            "Accept-Encoding": "identity",
-            # User-Agent might be helpful
-            "User-Agent": "IdealistaAPI/1.0" 
-        }
-        data = {"grant_type": "client_credentials", "scope": "read"}
+        # Fallback to system Curl as requested due to persistent behaviors with Python Requests
+        command = [
+            "curl", 
+            "-X", "POST",
+            "-H", f"Authorization: Basic {encoded_credentials}",
+            "-H", "Content-Type: application/x-www-form-urlencoded",
+            "-d", "grant_type=client_credentials&scope=read",
+            url,
+            "-k", # Insecure/Skip SSL as requested
+            "-s"  # Silent mode to avoid progress bar in output
+        ]
         
         try:
-            response = requests.post(url, headers=headers, data=data, timeout=10)
-            response.raise_for_status()
+            logger.info("[*] Executing curl for token...")
+            result = subprocess.run(command, capture_output=True, text=True, check=True)
             
-            result = response.json()
-            self.token = result.get("access_token")
+            # Curl output is expected to be the JSON response
+            response_json = json.loads(result.stdout)
+            
+            self.token = response_json.get("access_token")
             # Set expiry (usually lasts 1 hour, subtract buffer)
-            expires_in = result.get("expires_in", 3600)
+            expires_in = response_json.get("expires_in", 3600)
             self.token_expiry = time.time() + expires_in - 60
             
-            logger.info("[+] API Token retrieved successfully.")
+            logger.info("[+] API Token retrieved successfully via curl.")
             return self.token
             
-        except requests.exceptions.RequestException as e:
-            error_msg = f"[-] Failed to get API Token: {e}"
+        except subprocess.CalledProcessError as e:
+            error_msg = f"[-] Curl command failed: {e}\nStderr: {e.stderr}"
             logger.error(error_msg)
-            if hasattr(e, 'response') and e.response is not None:
-                # Log critical info only
-                logger.error(f"[-] Response Content: {e.response.text}")
-                error_msg += f"\nResponse: {e.response.text}"
-            
-            # Raise custom error for easier catching upstream
+            raise IdealistaAuthError(error_msg) from e
+        except json.JSONDecodeError as e:
+            error_msg = f"[-] Failed to decode JSON from curl output: {e}\nOutput: {result.stdout}"
+            logger.error(error_msg)
             raise IdealistaAuthError(error_msg) from e
 
     def search_properties(self, center=None, country="es", max_items=20, **kwargs):
@@ -76,7 +91,9 @@ class IdealistaAPI:
         
         headers = {
             "Authorization": f"Bearer {token}",
-            "Content-Type": "application/x-www-form-urlencoded"
+            "Content-Type": "application/x-www-form-urlencoded",
+            "User-Agent": "curl/7.81.0",
+            "Accept": "*/*"
         }
         
         # Default params
@@ -95,17 +112,39 @@ class IdealistaAPI:
         # Filter out None values
         params.update({k: v for k, v in kwargs.items() if v is not None})
 
-        # The API usually takes POST for complex searches or GET with query params.
-        # Standard documentation usually expects POST with form-data or GET.
-        # Let's assume POST for /search based on typical usage, or try GET if documented otherwise.
-        # Actually most examples show POST.
-        
+        # Update with dynamic kwargs (overriding defaults if provided)
+        # Filter out None values
+        params.update({k: v for k, v in kwargs.items() if v is not None})
+
+        # Fallback to system Curl as requested due to persistent behaviors with Python Requests
         try:
-            response = requests.post(url, headers=headers, data=params, timeout=15)
-            response.raise_for_status()
-            return response.json()  # Returns list of elements usually
-        except requests.exceptions.RequestException as e:
-            logger.error(f"[-] Search Request Failed: {e}")
-            if hasattr(e, 'response') and e.response is not None:
-                logger.error(f"[-] Response Content: {e.response.text}")
-            return []
+            from urllib.parse import urlencode
+            data_str = urlencode(params)
+            
+            command = [
+                "curl", 
+                "-X", "POST",
+                "-H", f"Authorization: Bearer {token}",
+                "-H", "Content-Type: application/x-www-form-urlencoded",
+                "-d", data_str,
+                url,
+                "-k", # Insecure/Skip SSL as requested
+                "-s"  # Silent mode
+            ]
+            
+            logger.info("[*] Executing curl for search...")
+            result = subprocess.run(command, capture_output=True, text=True, check=True)
+            
+            # Curl output is expected to be the JSON response
+            return json.loads(result.stdout)
+
+        except subprocess.CalledProcessError as e:
+            error_msg = f"[-] Curl search command failed: {e}\nStderr: {e.stderr}"
+            logger.error(error_msg)
+            raise IdealistaSearchError(error_msg) from e
+        except json.JSONDecodeError as e:
+            error_msg = f"[-] Failed to decode JSON from curl search output: {e}\nOutput: {result.stdout}"
+            logger.error(error_msg)
+            # If empty output, return empty dict as originally intended, or raise error?
+            # Sticking to raising error to notify user via Telegram as per previous instruction
+            raise IdealistaSearchError(error_msg) from e
