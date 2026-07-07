@@ -61,6 +61,10 @@ class IdealistaAPI:
             response_json = json.loads(result.stdout)
             
             self.token = response_json.get("access_token")
+            if not self.token:
+                error_msg = f"[-] Token response contained no access_token: {result.stdout}"
+                logger.error(error_msg)
+                raise IdealistaAuthError(error_msg)
             # Set expiry (usually lasts 1 hour, subtract buffer)
             expires_in = response_json.get("expires_in", 3600)
             self.token_expiry = time.time() + expires_in - 60
@@ -112,10 +116,6 @@ class IdealistaAPI:
         # Filter out None values
         params.update({k: v for k, v in kwargs.items() if v is not None})
 
-        # Update with dynamic kwargs (overriding defaults if provided)
-        # Filter out None values
-        params.update({k: v for k, v in kwargs.items() if v is not None})
-
         # Fallback to system Curl as requested due to persistent behaviors with Python Requests
         try:
             from urllib.parse import urlencode
@@ -134,9 +134,16 @@ class IdealistaAPI:
             
             logger.info("[*] Executing curl for search...")
             result = subprocess.run(command, capture_output=True, text=True, check=True)
-            
+
             # Curl output is expected to be the JSON response
-            return json.loads(result.stdout)
+            response_json = json.loads(result.stdout)
+
+            if isinstance(response_json, dict) and "error" in response_json:
+                error_msg = f"[-] Search API returned an error: {result.stdout}"
+                logger.error(error_msg)
+                raise IdealistaSearchError(error_msg)
+
+            return response_json
 
         except subprocess.CalledProcessError as e:
             error_msg = f"[-] Curl search command failed: {e}\nStderr: {e.stderr}"

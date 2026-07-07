@@ -87,7 +87,13 @@ async def main():
         await send_message(TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, error_msg)
         return
 
-    listings = results.get("elementList", [])
+    listings = results.get("elementList")
+    if listings is None:
+        logger.error(f"[-] Unexpected API response (no 'elementList'): {results}")
+        error_msg = f"⚠️ *Idealista Search Failed* ⚠️\n\nAPI response missing 'elementList'.\nResponse: `{results}`"
+        await send_message(TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, error_msg)
+        return
+
     logger.info(f"[+] Found {len(listings)} listings.")
 
     new_count = 0
